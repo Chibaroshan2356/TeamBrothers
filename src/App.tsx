@@ -8,10 +8,11 @@ import { Login } from "./pages/Login";
 import { Signup } from "./pages/Signup";
 import Index from "./pages/Index";
 import Fleet from "./pages/Fleet";
-import Recommend from "./pages/Recommend";
 import Booking from "./pages/Booking";
 import Contact from "./pages/Contact";
 import Admin from "./pages/Admin";
+import Dashboard from "./pages/Dashboard";
+import CompareVehicles from "./pages/CompareVehicles";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useEffect } from "react";
@@ -79,12 +80,13 @@ const App = () => {
               }>
                 <Route path="home" element={<Index />} />
                 <Route path="fleet" element={<Fleet />} />
-                <Route path="recommend" element={<Recommend />} />
+                <Route path="compare-vehicles" element={<CompareVehicles />} />
                 <Route path="contact" element={<Contact />} />
                 
                 {/* Protected Routes */}
                 <Route element={<AuthWrapper><Outlet /></AuthWrapper>}>
                   <Route path="booking" element={<Booking />} />
+                  <Route path="dashboard" element={<Dashboard />} />
                 </Route>
                 
                 <Route path="*" element={<Navigate to="/home" replace />} />

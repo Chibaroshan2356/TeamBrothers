@@ -40,8 +40,10 @@ import { cn } from '@/lib/utils';
 const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: 'Pending', color: 'bg-warning text-warning-foreground', icon: Clock },
   approved: { label: 'Approved', color: 'bg-success text-success-foreground', icon: CheckCircle },
+  confirmed: { label: 'Confirmed', color: 'bg-blue-500 text-white', icon: CheckCircle },
   rejected: { label: 'Rejected', color: 'bg-destructive text-destructive-foreground', icon: XCircle },
   completed: { label: 'Completed', color: 'bg-primary text-primary-foreground', icon: CheckCircle },
+  cancelled: { label: 'Cancelled', color: 'bg-gray-500 text-white', icon: XCircle },
 };
 
 const Admin = () => {

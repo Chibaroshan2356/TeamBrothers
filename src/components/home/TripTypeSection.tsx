@@ -39,7 +39,7 @@ const tripTypes: {
 
 export function TripTypeSection() {
   return (
-    <section className="py-20 bg-background">
+    <section className="py-12 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12">
@@ -56,7 +56,7 @@ export function TripTypeSection() {
           {tripTypes.map((trip, index) => (
             <Link 
               key={trip.type} 
-              to={`/recommend?tripType=${trip.type}`}
+              to={`/fleet?tripType=${trip.type}`}
               className="group"
             >
               <Card 

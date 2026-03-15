@@ -11,6 +11,7 @@ import { useApp } from '@/context/AppContext';
 import { TripType, tripTypeLabels, calculateTripCost } from '@/data/vehicles';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import VehicleAvailabilityCalendar from '@/components/vehicles/VehicleAvailabilityCalendar';
 
 // Form validation schema
 const bookingSchema = z.object({
@@ -19,7 +20,8 @@ const bookingSchema = z.object({
   customerEmail: z.string().trim().email('Enter valid email address').max(255, 'Email too long'),
   pickupLocation: z.string().trim().min(3, 'Enter valid pickup location').max(200, 'Location too long'),
   dropLocation: z.string().trim().min(3, 'Enter valid drop location').max(200, 'Location too long'),
-  pickupDate: z.string().min(1, 'Select pickup date'),
+  pickupDate: z.date({ required_error: 'Select pickup date' }),
+  returnDate: z.date({ required_error: 'Select return date' }),
   pickupTime: z.string().min(1, 'Select pickup time'),
   notes: z.string().max(500, 'Notes too long').optional(),
 });
@@ -53,12 +55,14 @@ const Booking = () => {
   const [customerEmail, setCustomerEmail] = useState('');
   const [pickupLocation, setPickupLocation] = useState('');
   const [dropLocation, setDropLocation] = useState('');
-  const [pickupDate, setPickupDate] = useState('');
+  const [pickupDate, setPickupDate] = useState<Date | null>(null);
+  const [returnDate, setReturnDate] = useState<Date | null>(null);
   const [pickupTime, setPickupTime] = useState('');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
   // Selected vehicle
   const selectedVehicle = useMemo(() => 
@@ -89,6 +93,7 @@ const Booking = () => {
         pickupLocation,
         dropLocation,
         pickupDate,
+        returnDate,
         pickupTime,
         notes,
       });
@@ -105,6 +110,62 @@ const Booking = () => {
         setErrors(newErrors);
       }
       return false;
+    }
+  };
+
+  const checkAvailability = async (pickup: Date, returnD: Date) => {
+    if (!selectedVehicle) return;
+
+    try {
+      console.log('Checking availability for:', {
+        vehicleId: selectedVehicle.id,
+        vehicleName: selectedVehicle.name,
+        pickup: pickup.toISOString(),
+        return: returnD.toISOString()
+      });
+
+      const response = await fetch(
+        `http://localhost:5000/api/bookings/availability?vehicleId=${selectedVehicle.id}&pickupDate=${pickup.toISOString()}&returnDate=${returnD.toISOString()}`
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Availability response:', data);
+
+      if (!data.success) {
+        setAvailabilityError(data.message || 'Vehicle is not available for the selected dates');
+        return false;
+      } else if (!data.isAvailable) {
+        setAvailabilityError('Vehicle is not available for the selected dates');
+        return false;
+      } else {
+        setAvailabilityError(null);
+        return true;
+      }
+    } catch (error) {
+      console.error('Availability check error:', error);
+      // If backend is not available, assume vehicle is available
+      if (error.message.includes('Failed to fetch') || error.message.includes('ECONNREFUSED')) {
+        console.log('Backend not available, assuming vehicle is available');
+        setAvailabilityError(null);
+        return true;
+      }
+      setAvailabilityError('Error checking availability. Please try again.');
+      return false;
+    }
+  };
+
+  const handleDateSelect = async (pickup: Date, returnD: Date) => {
+    setPickupDate(pickup);
+    setReturnDate(returnD);
+    
+    if (selectedVehicle) {
+      await checkAvailability(pickup, returnD);
     }
   };
 
@@ -128,6 +189,15 @@ const Booking = () => {
       return;
     }
 
+    if (availabilityError) {
+      toast({
+        title: "Vehicle not available",
+        description: availabilityError,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -142,6 +212,7 @@ const Booking = () => {
         pickupLocation,
         dropLocation,
         pickupDate,
+        returnDate,
         pickupTime,
         distance,
         estimatedCost,
@@ -153,6 +224,7 @@ const Booking = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify(bookingData),
       });
@@ -175,11 +247,13 @@ const Booking = () => {
         setPassengers(1);
         setPickupLocation('');
         setDropLocation('');
-        setPickupDate('');
+        setPickupDate(null);
+        setReturnDate(null);
         setPickupTime('');
         setDistance(0);
         setNotes('');
         setErrors({});
+        setAvailabilityError(null);
       } else {
         throw new Error('Failed to submit booking');
       }
@@ -246,22 +320,34 @@ const Booking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12">
-      <div className="container mx-auto px-4">
-        {/* Page Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-4">
-            <Calendar className="w-5 h-5 text-primary" />
-            <span className="text-primary font-medium">Book Your Ride</span>
-          </div>
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Make an Enquiry
-          </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Fill in your trip details and we'll get back to you with availability and final pricing.
-          </p>
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <div className="gradient-hero relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-secondary rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary-foreground rounded-full blur-3xl" />
         </div>
+        
+        <div className="container mx-auto px-4 py-20 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-secondary/20 backdrop-blur-sm border border-secondary/30 rounded-full px-4 py-2 mb-6 animate-fade-in">
+              <Send className="w-4 h-4 text-secondary" />
+              <span className="text-primary-foreground font-semibold text-sm">Book Your Journey</span>
+            </div>
+            
+            <h1 className="font-heading text-5xl md:text-6xl font-bold text-primary-foreground mb-4 animate-slide-up">
+              Complete Your <span className="text-gradient">Booking</span>
+            </h1>
+            
+            <p className="text-primary-foreground/80 text-lg md:text-xl max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              Fill in your trip details and we'll provide you with the best vehicle options and pricing for your journey.
+            </p>
+          </div>
+        </div>
+      </div>
 
+      <div className="container mx-auto px-4 py-8">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Main Form */}
           <div className="lg:col-span-2 space-y-6">
@@ -365,32 +451,39 @@ const Booking = () => {
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pickupDate">Pickup Date</Label>
-                    <Input
-                      id="pickupDate"
-                      type="date"
-                      min={minDateStr}
-                      value={pickupDate}
-                      onChange={(e) => setPickupDate(e.target.value)}
+                <div className="space-y-4">
+                  {selectedVehicleId ? (
+                    <VehicleAvailabilityCalendar
+                      vehicleId={selectedVehicleId}
+                      onDateSelect={handleDateSelect}
+                      selectedDates={pickupDate && returnDate ? { pickup: pickupDate, return: returnDate } : null}
                     />
-                    {errors.pickupDate && (
-                      <p className="text-xs text-destructive">{errors.pickupDate}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="pickupTime">Pickup Time</Label>
-                    <Input
-                      id="pickupTime"
-                      type="time"
-                      value={pickupTime}
-                      onChange={(e) => setPickupTime(e.target.value)}
-                    />
-                    {errors.pickupTime && (
-                      <p className="text-xs text-destructive">{errors.pickupTime}</p>
-                    )}
-                  </div>
+                  ) : (
+                    <div className="text-center p-8 text-gray-500">
+                      <p>Please select a vehicle to view availability calendar</p>
+                    </div>
+                  )}
+                  {availabilityError && (
+                    <p className="text-xs text-destructive">{availabilityError}</p>
+                  )}
+                  {errors.pickupDate && (
+                    <p className="text-xs text-destructive">{errors.pickupDate}</p>
+                  )}
+                  {errors.returnDate && (
+                    <p className="text-xs text-destructive">{errors.returnDate}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pickupTime">Pickup Time</Label>
+                  <Input
+                    id="pickupTime"
+                    type="time"
+                    value={pickupTime}
+                    onChange={(e) => setPickupTime(e.target.value)}
+                  />
+                  {errors.pickupTime && (
+                    <p className="text-xs text-destructive">{errors.pickupTime}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -469,7 +562,7 @@ const Booking = () => {
               <CardContent className="pt-6 space-y-4">
                 {selectedVehicle ? (
                   <>
-                    <div className="flex items-center gap-3 pb-4 border-b border-border">
+                    <div className="flex items-center gap-3 pb-4">
                       <img
                         src={selectedVehicle.image}
                         alt={selectedVehicle.name}
@@ -500,7 +593,7 @@ const Booking = () => {
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t border-border">
+                    <div className="pt-4">
                       <div className="flex justify-between items-center">
                         <span className="font-semibold text-lg">Estimated Total</span>
                         <span className="font-heading text-2xl font-bold text-primary">

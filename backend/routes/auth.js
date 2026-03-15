@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
+const admin = require('../config/firebase');
+const { firebaseInitialized } = require('../config/firebase');
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -114,6 +117,84 @@ router.get('/me', protect, async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
+  }
+});
+
+// @desc    Google OAuth login
+// @route   POST /api/auth/google
+// @access  Public
+router.post('/google', async (req, res) => {
+  try {
+    // Check if Firebase is initialized
+    if (!firebaseInitialized) {
+      return res.status(503).json({ 
+        success: false, 
+        message: 'Google authentication is not configured on the server. Please contact the administrator.' 
+      });
+    }
+
+    const { idToken } = req.body;
+    
+    if (!idToken) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'ID token is required' 
+      });
+    }
+
+    // Verify ID token with Firebase Admin
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    
+    if (!decodedToken) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Invalid ID token' 
+      });
+    }
+
+    const { email, name, picture, uid } = decodedToken;
+    
+    // Check if user exists in our database
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      // Create new user with Google OAuth
+      user = new User({
+        name: name || email.split('@')[0],
+        email,
+        googleId: uid,
+        role: 'user',
+        password: 'google-oauth-' + uid, // Placeholder password for Google users
+      });
+      
+      await user.save();
+      console.log('New Google user created:', user._id);
+    }
+
+    // Generate JWT token using the User model method
+    const token = user.getSignedJwtToken();
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: picture,
+        rewardPoints: user.rewardPoints,
+        tier: user.tier,
+        totalBookings: user.totalBookings,
+      }
+    });
+
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Server error during authentication' 
+    });
   }
 });
 

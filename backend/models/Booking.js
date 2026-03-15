@@ -31,6 +31,11 @@ const bookingSchema = new mongoose.Schema(
         'Please add a valid email',
       ],
     },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     tripType: {
       type: String,
       required: [true, 'Trip type is required'],
@@ -50,8 +55,12 @@ const bookingSchema = new mongoose.Schema(
       required: [true, 'Drop location is required'],
     },
     pickupDate: {
-      type: String,
+      type: Date,
       required: [true, 'Pickup date is required'],
+    },
+    returnDate: {
+      type: Date,
+      required: [true, 'Return date is required'],
     },
     pickupTime: {
       type: String,
@@ -67,7 +76,7 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'completed'],
+      enum: ['pending', 'approved', 'confirmed', 'rejected', 'completed', 'cancelled'],
       default: 'pending',
     },
     notes: {
@@ -77,6 +86,10 @@ const bookingSchema = new mongoose.Schema(
     createdAt: {
       type: Date,
       default: Date.now,
+    },
+    pointsAwarded: {
+      type: Boolean,
+      default: false,
     },
   },
   {

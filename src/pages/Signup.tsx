@@ -1,149 +1,169 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import { signInWithPopup } from "firebase/auth"
+import { auth, googleProvider } from "../firebase"
+import bus from "../assets/bus.png"
 
-export function Signup() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+export function Signup(){
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (password !== confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Passwords do not match',
-        variant: 'destructive',
-      });
-      return;
-    }
+const navigate = useNavigate()
 
-    setIsLoading(true);
-    
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      });
+const [name,setName] = useState("")
+const [email,setEmail] = useState("")
+const [password,setPassword] = useState("")
+const [confirmPassword,setConfirmPassword] = useState("")
 
-      const data = await response.json();
+const handleSubmit = async(e:any)=>{
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
+e.preventDefault()
 
-      toast({
-        title: 'Account Created',
-        description: 'Your account has been created successfully!',
-      });
-
-      // Store token if needed
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-
-      // Redirect to login page after successful signup
-      navigate('/login');
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'An error occurred while creating your account',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-heading">Create an account</CardTitle>
-          <CardDescription>
-            Enter your details to create a new account
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-              <p className="text-xs text-muted-foreground">
-                Password must be at least 6 characters long
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating account...' : 'Sign Up'}
-            </Button>
-            <div className="text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </div>
-          </CardFooter>
-        </form>
-      </Card>
-    </div>
-  );
+if(password !== confirmPassword){
+alert("Passwords do not match")
+return
 }
 
-export default Signup;
+try{
+
+const res = await fetch("http://localhost:5000/api/auth/register",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({name,email,password})
+})
+
+const data = await res.json()
+
+if(!res.ok){
+alert(data.message || "Signup failed")
+return
+}
+
+localStorage.setItem("token",data.token)
+localStorage.setItem("user",JSON.stringify(data.user))
+
+navigate("/home")
+
+}catch(err){
+alert("Server error")
+}
+
+}
+
+const handleGoogleSignup = async()=>{
+
+try{
+
+const result = await signInWithPopup(auth,googleProvider)
+const user = result.user
+const idToken = await user.getIdToken()
+
+const res = await fetch("http://localhost:5000/api/auth/google",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({idToken})
+})
+
+const data = await res.json()
+
+localStorage.setItem("token",data.token)
+localStorage.setItem("user",JSON.stringify(data.user))
+
+navigate("/home")
+
+}catch(err){
+alert("Google signup failed")
+}
+
+}
+
+return(
+
+<div className="min-h-screen flex items-center justify-center bg-[#f3e6d6] relative overflow-hidden">
+
+{/* BACKGROUND CIRCLES */}
+
+<div className="absolute w-[700px] h-[700px] bg-orange-300 rounded-full -top-60 -left-60 opacity-50"></div>
+
+<div className="absolute w-[200px] h-[200px] bg-orange-300 rounded-full right-24 top-24 opacity-50"></div>
+
+<div className="absolute w-[150px] h-[150px] bg-orange-300 rounded-full bottom-24 right-72 opacity-50"></div>
+
+{/* BUS IMAGE */} <img
+src={bus}
+className="absolute left-10 bottom-0 w-[650px] hidden lg:block"
+/>
+
+{/* SIGNUP CARD */}
+
+<div className="bg-white shadow-2xl rounded-2xl p-10 w-[420px] relative z-10">
+
+<h1 className="text-3xl font-bold text-center mb-2">
+WELCOME
+</h1>
+
+<p className="text-center text-gray-500 mb-6">
+Let's get you started
+</p>
+
+<form onSubmit={handleSubmit} className="space-y-4">
+
+<input
+placeholder="Full Name"
+value={name}
+onChange={(e)=>setName(e.target.value)}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+<input
+type="email"
+placeholder="Email"
+value={email}
+onChange={(e)=>setEmail(e.target.value)}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+<input
+type="password"
+placeholder="Password"
+value={password}
+onChange={(e)=>setPassword(e.target.value)}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+<input
+type="password"
+placeholder="Confirm Password"
+value={confirmPassword}
+onChange={(e)=>setConfirmPassword(e.target.value)}
+className="w-full border rounded-md px-3 py-2"
+/>
+
+<button
+type="button"
+onClick={handleGoogleSignup}
+className="w-full border rounded-md py-2 hover:bg-gray-100"
+
+>
+
+Continue with Google </button>
+
+<button
+className="w-full bg-orange-500 text-white py-2 rounded-md hover:bg-orange-600"
+
+>
+
+Sign Up </button>
+
+</form>
+
+<p className="text-center text-sm mt-4">
+Already have an account?{" "}
+<Link to="/login" className="text-orange-500 font-medium">
+Log in
+</Link>
+</p>
+
+</div>
+
+</div>
+)
+}

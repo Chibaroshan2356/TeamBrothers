@@ -51,9 +51,9 @@ export function FeaturedVehicles() {
           <p className="text-muted-foreground mb-4">
             Not sure which vehicle suits you best?
           </p>
-          <Link to="/recommend">
+          <Link to="/fleet">
             <Button size="lg" variant="default">
-              Get Smart Recommendation
+              View Our Fleet
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </Link>

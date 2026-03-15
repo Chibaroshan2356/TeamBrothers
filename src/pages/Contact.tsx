@@ -85,7 +85,7 @@ const Contact = () => {
   };
 
   const handleWhatsApp = () => {
-    const text = encodeURIComponent("Hi TravelEase! I'd like to enquire about vehicle rentals.");
+    const text = encodeURIComponent("Hi Travel Brother's! I'd like to enquire about vehicle rentals.");
     window.open(`https://wa.me/919876543210?text=${text}`, '_blank');
   };
 
@@ -95,7 +95,7 @@ const Contact = () => {
       <ContactSection />
       
       {/* Contact Form Section */}
-      <div className="py-16 bg-background">
+      <div className="pt-32 pb-16 bg-background relative z-10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -165,8 +165,7 @@ const Contact = () => {
                   <div>
                     <h4 className="font-medium">Office Address</h4>
                     <p className="text-muted-foreground">
-                      123 Travel Hub, Main Road<br />
-                      City Center, India - 400001
+                      Team Brother's,Namakkal<br />
                     </p>
                   </div>
                 </div>

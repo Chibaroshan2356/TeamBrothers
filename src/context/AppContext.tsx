@@ -5,7 +5,7 @@ interface AppContextType {
   // Authentication
   isAuthenticated: boolean;
   isAdmin: boolean;
-  user: { name: string; email: string; role: string } | null;
+  user: { name: string; email: string; role: string; createdAt?: string; rewardPoints?: number; tier?: string; totalBookings?: number } | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   setIsAdmin: (value: boolean) => void;
@@ -13,6 +13,7 @@ interface AppContextType {
   // Vehicles
   vehicles: Vehicle[];
   toggleVehicleAvailability: (vehicleId: string) => void;
+  refreshVehicleData: () => void;
   
   // Bookings
   bookings: Booking[];
@@ -49,6 +50,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => 
     loadFromStorage('vehicles', initialVehicles)
   );
+
+  // Function to refresh vehicle data from initial import
+  const refreshVehicleData = () => {
+    localStorage.removeItem('vehicles');
+    setVehicles(initialVehicles);
+  };
   const [bookings, setBookings] = useState<Booking[]>(() => 
     loadFromStorage('bookings', [])
   );
@@ -79,7 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         setIsAuthenticated(true);
         setIsAdmin(data.user.role === 'admin');
         setUser(data.user);
@@ -103,6 +110,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('isAdmin');
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   // Persist vehicles to localStorage
@@ -200,6 +208,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Vehicles
       vehicles,
       toggleVehicleAvailability,
+      refreshVehicleData,
       
       // Bookings
       bookings,

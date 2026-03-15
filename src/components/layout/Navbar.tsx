@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Car, Shield, LogOut, User } from 'lucide-react';
+import { Menu, X, Bus, Shield, LogOut, User, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,6 @@ import {
 const navLinks = [
   { href: '/home', label: 'Home' },
   { href: '/fleet', label: 'Our Fleet' },
-  { href: '/recommend', label: 'Smart Recommend' },
   { href: '/booking', label: 'Book Now' },
   { href: '/contact', label: 'Contact' },
 ];
@@ -32,16 +31,20 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
+    <>
+      {/* Main Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-white/65 backdrop-blur-md shadow-sm">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link
             to="/home"
-            className="flex items-center gap-2 text-primary font-heading font-bold text-xl"
+            className="flex items-center gap-2 font-heading font-bold text-xl group"
           >
-            <Car className="w-7 h-7" />
-            <span>Team Brother's</span>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-cyan flex items-center justify-center shadow-glow group-hover:shadow-xl transition-all duration-300">
+              <Bus className="w-6 h-6 text-white" />
+            </div>
+            <span className="bg-gradient-to-r from-primary to-cyan bg-clip-text text-transparent">Team Brother's</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -51,10 +54,10 @@ export function Navbar() {
                 key={link.href}
                 to={link.href}
                 className={cn(
-                  "px-4 py-2 rounded-lg font-medium transition-all duration-200",
+                  "px-4 py-2 rounded-lg font-medium transition-all duration-200 relative",
                   location.pathname === link.href
-                    ? "bg-primary text-primary-foreground"
-                    : "text-foreground/70 hover:text-foreground hover:bg-accent"
+                    ? "bg-primary text-white"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 )}
               >
                 {link.label}
@@ -67,9 +70,11 @@ export function Navbar() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span className="hidden sm:inline">{user?.name || 'User'}</span>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:bg-gray-100">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                      <User className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <span className="text-sm text-gray-700">CHIBA ROSHAN A</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -83,12 +88,17 @@ export function Navbar() {
                   )}
                   {isAdmin && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
-                      <Shield className="w-4 h-4 mr-2" />
+                      <Shield className="w-4 h-4 mr-2 text-purple" />
                       Admin Panel
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                    <LayoutDashboard className="w-4 h-4 mr-2 text-blue" />
+                    My Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="w-4 h-4 mr-2" />
+                    <LogOut className="w-4 h-4 mr-2 text-destructive" />
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -98,7 +108,7 @@ export function Navbar() {
                 <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
                   Sign In
                 </Button>
-                <Button size="sm" onClick={() => navigate('/signup')}>
+                <Button variant="gradient" size="sm" onClick={() => navigate('/signup')}>
                   Sign Up
                 </Button>
               </div>
@@ -153,6 +163,14 @@ export function Navbar() {
                         Admin Panel
                       </Link>
                     )}
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setIsOpen(false)}
+                      className="px-4 py-3 rounded-lg font-medium transition-all text-foreground/70 hover:bg-accent flex items-center gap-2"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      My Dashboard
+                    </Link>
                     <button
                       onClick={() => {
                         handleLogout();
@@ -188,5 +206,6 @@ export function Navbar() {
         )}
       </div>
     </nav>
+    </>
   );
 }
