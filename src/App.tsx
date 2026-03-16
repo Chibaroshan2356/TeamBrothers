@@ -13,6 +13,7 @@ import Contact from "./pages/Contact";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
 import CompareVehicles from "./pages/CompareVehicles";
+import TripDetails from "./pages/TripDetails";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useEffect } from "react";

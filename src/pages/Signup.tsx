@@ -59,7 +59,12 @@ const idToken = await user.getIdToken()
 const res = await fetch("http://localhost:5000/api/auth/google",{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
-body:JSON.stringify({idToken})
+body:JSON.stringify({
+idToken,
+displayName: user.displayName,
+email: user.email,
+photoURL: user.photoURL
+})
 })
 
 const data = await res.json()

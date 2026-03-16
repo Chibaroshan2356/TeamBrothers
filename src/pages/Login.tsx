@@ -134,7 +134,13 @@ export function Login() {
 
         },
 
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ 
+
+          idToken,
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL
+        }),
 
       });
 

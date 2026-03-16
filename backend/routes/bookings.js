@@ -284,4 +284,40 @@ router.patch('/:id/status', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+// Feedback submission route
+router.post('/feedback', async (req, res) => {
+  try {
+    const { bookingId, feedback } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found"
+      });
+    }
+
+    booking.feedback = feedback;
+    booking.feedbackDate = new Date();
+
+    await booking.save();
+
+    console.log('Feedback saved to booking:', bookingId);
+
+    res.json({
+      success: true,
+      message: "Feedback saved successfully"
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+
 module.exports = router;

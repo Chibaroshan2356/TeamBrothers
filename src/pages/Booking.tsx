@@ -12,6 +12,15 @@ import { TripType, tripTypeLabels, calculateTripCost } from '@/data/vehicles';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import VehicleAvailabilityCalendar from '@/components/vehicles/VehicleAvailabilityCalendar';
+import TripDetailsSection from '@/components/booking/TripDetailsSection';
+
+interface TripData {
+  pickupLocation: string;
+  dropLocation: string;
+  pickupDate: Date;
+  returnDate: Date;
+  pickupTime: string;
+}
 
 // Form validation schema
 const bookingSchema = z.object({
@@ -45,24 +54,38 @@ const Booking = () => {
   const preselectedVehicleId = searchParams.get('vehicle');
   const preselectedDistance = Number(searchParams.get('distance')) || 100;
 
+  // State for trip details
+  const [tripData, setTripData] = useState<TripData | null>(null);
+
   // Form state
   const [selectedVehicleId, setSelectedVehicleId] = useState(preselectedVehicleId || '');
   const [tripType, setTripType] = useState<TripType>('family');
-  const [passengers, setPassengers] = useState(4);
   const [distance, setDistance] = useState(preselectedDistance);
+  const [passengers, setPassengers] = useState(4);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [pickupLocation, setPickupLocation] = useState('');
   const [dropLocation, setDropLocation] = useState('');
-  const [pickupDate, setPickupDate] = useState<Date | null>(null);
-  const [returnDate, setReturnDate] = useState<Date | null>(null);
+  const [pickupDate, setPickupDate] = useState('');
+  const [returnDate, setReturnDate] = useState('');
   const [pickupTime, setPickupTime] = useState('');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+
+  // Handle trip data from TripDetailsSection
+  const handleTripData = (data: TripData) => {
+    setTripData(data);
+    // Update form state with trip data
+    setPickupLocation(data.pickupLocation);
+    setDropLocation(data.dropLocation);
+    setPickupDate(data.pickupDate.toISOString().split('T')[0]);
+    setReturnDate(data.returnDate.toISOString().split('T')[0]);
+    setPickupTime(data.pickupTime);
+  };
 
   // Selected vehicle
   const selectedVehicle = useMemo(() => 
@@ -86,14 +109,17 @@ const Booking = () => {
 
   const validateForm = () => {
     try {
+      // For single day trips, use pickupDate as returnDate for validation
+      const finalReturnDate = returnDate || pickupDate;
+      
       bookingSchema.parse({
         customerName,
         customerPhone,
         customerEmail,
         pickupLocation,
         dropLocation,
-        pickupDate,
-        returnDate,
+        pickupDate: new Date(pickupDate),
+        returnDate: new Date(finalReturnDate),
         pickupTime,
         notes,
       });
@@ -150,7 +176,10 @@ const Booking = () => {
     } catch (error) {
       console.error('Availability check error:', error);
       // If backend is not available, assume vehicle is available
-      if (error.message.includes('Failed to fetch') || error.message.includes('ECONNREFUSED')) {
+      if (error instanceof Error && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('ECONNREFUSED')
+      )) {
         console.log('Backend not available, assuming vehicle is available');
         setAvailabilityError(null);
         return true;
@@ -161,8 +190,8 @@ const Booking = () => {
   };
 
   const handleDateSelect = async (pickup: Date, returnD: Date) => {
-    setPickupDate(pickup);
-    setReturnDate(returnD);
+    setPickupDate(pickup.toISOString().split('T')[0]);
+    setReturnDate(returnD.toISOString().split('T')[0]);
     
     if (selectedVehicle) {
       await checkAvailability(pickup, returnD);
@@ -172,9 +201,30 @@ const Booking = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedVehicle) {
+    // Use tripData directly if form state is empty
+    const finalPickupLocation = pickupLocation || tripData?.pickupLocation || '';
+    const finalDropLocation = dropLocation || tripData?.dropLocation || '';
+    const finalPickupDate = pickupDate || tripData?.pickupDate?.toISOString().split('T')[0] || '';
+    const finalReturnDate = returnDate || tripData?.returnDate?.toISOString().split('T')[0] || '';
+    const finalPickupTime = pickupTime || tripData?.pickupTime || '';
+    const finalCustomerName = customerName || '';
+    const finalCustomerPhone = customerPhone || '';
+    const finalCustomerEmail = customerEmail || '';
+    
+    // Check if basic trip details are filled
+    if (!finalPickupLocation || !finalDropLocation || !finalPickupDate || !finalPickupTime) {
       toast({
-        title: "Please select a vehicle",
+        title: "Please complete trip details",
+        description: "Fill in pickup, drop location, date and time",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!finalCustomerName || !finalCustomerPhone) {
+      toast({
+        title: "Please fill customer details",
+        description: "Name and phone are required",
         variant: "destructive",
       });
       return;
@@ -202,8 +252,8 @@ const Booking = () => {
 
     try {
       const bookingData = {
-        vehicleId: selectedVehicle.id,
-        vehicleName: selectedVehicle.name,
+        vehicleId: selectedVehicle?.id || null,
+        vehicleName: selectedVehicle?.name || 'Not specified',
         customerName,
         customerPhone,
         customerEmail,
@@ -247,13 +297,24 @@ const Booking = () => {
         setPassengers(1);
         setPickupLocation('');
         setDropLocation('');
-        setPickupDate(null);
-        setReturnDate(null);
+        setPickupDate('');
+        setReturnDate('');
         setPickupTime('');
         setDistance(0);
         setNotes('');
         setErrors({});
         setAvailabilityError(null);
+
+        // Show success message and refresh page
+        toast({
+          title: "Success!",
+          description: "Your enquiry has been submitted successfully. We'll contact you soon.",
+        });
+        
+        // Refresh page after 2 seconds
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         throw new Error('Failed to submit booking');
       }
@@ -417,76 +478,7 @@ const Booking = () => {
             </Card>
 
             {/* Trip Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
-                  Trip Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pickupLocation">Pickup Location</Label>
-                    <Input
-                      id="pickupLocation"
-                      placeholder="e.g., Mumbai Central"
-                      value={pickupLocation}
-                      onChange={(e) => setPickupLocation(e.target.value)}
-                    />
-                    {errors.pickupLocation && (
-                      <p className="text-xs text-destructive">{errors.pickupLocation}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dropLocation">Drop Location</Label>
-                    <Input
-                      id="dropLocation"
-                      placeholder="e.g., Lonavala"
-                      value={dropLocation}
-                      onChange={(e) => setDropLocation(e.target.value)}
-                    />
-                    {errors.dropLocation && (
-                      <p className="text-xs text-destructive">{errors.dropLocation}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  {selectedVehicleId ? (
-                    <VehicleAvailabilityCalendar
-                      vehicleId={selectedVehicleId}
-                      onDateSelect={handleDateSelect}
-                      selectedDates={pickupDate && returnDate ? { pickup: pickupDate, return: returnDate } : null}
-                    />
-                  ) : (
-                    <div className="text-center p-8 text-gray-500">
-                      <p>Please select a vehicle to view availability calendar</p>
-                    </div>
-                  )}
-                  {availabilityError && (
-                    <p className="text-xs text-destructive">{availabilityError}</p>
-                  )}
-                  {errors.pickupDate && (
-                    <p className="text-xs text-destructive">{errors.pickupDate}</p>
-                  )}
-                  {errors.returnDate && (
-                    <p className="text-xs text-destructive">{errors.returnDate}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="pickupTime">Pickup Time</Label>
-                  <Input
-                    id="pickupTime"
-                    type="time"
-                    value={pickupTime}
-                    onChange={(e) => setPickupTime(e.target.value)}
-                  />
-                  {errors.pickupTime && (
-                    <p className="text-xs text-destructive">{errors.pickupTime}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <TripDetailsSection onSearchVehicles={handleTripData} />
 
             {/* Customer Details */}
             <Card>
@@ -613,20 +605,20 @@ const Booking = () => {
 
                 <div className="space-y-3 pt-4">
                   <Button 
-                    type="submit" 
-                    className="w-full" 
-                    size="lg"
-                    disabled={!selectedVehicle || isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>Processing...</>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Submit Enquiry
-                      </>
-                    )}
-                  </Button>
+  type="submit" 
+  className="w-full" 
+  size="lg"
+  disabled={isSubmitting}
+>
+  {isSubmitting ? (
+    <>Processing...</>
+  ) : (
+    <>
+      <Send className="w-4 h-4 mr-2" />
+      Submit Enquiry
+    </>
+  )}
+</Button>
                   
                   <Button
                     type="button"

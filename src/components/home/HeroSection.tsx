@@ -27,21 +27,21 @@ export function HeroSection() {
             </div>
 
             {/* Title */}
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground leading-tight mb-6">
+            <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground leading-tight mb-6">
               Your Journey, <span className="text-gradient">Our Wheels</span>
             </h1>
 
             {/* Description */}
-            <p className="text-lg md:text-xl text-primary-foreground/80 mb-8 max-w-xl">
+            <p className="text-base md:text-lg text-primary-foreground/80 mb-8 max-w-xl">
               From intimate family getaways to grand corporate events,
               experience comfort and reliability with our premium fleet of
-              10 meticulously maintained vehicles.
+              6 meticulously maintained vehicles.
             </p>
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/fleet">
-                <Button size="lg" variant="secondary" className="text-lg px-8">
+                <Button size="lg" variant="secondary" className="text-base px-6">
                   Explore Fleet
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
@@ -51,7 +51,7 @@ export function HeroSection() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-lg px-8 py-3 rounded-xl font-semibold bg-slate-100/90 text-slate-900 hover:bg-white"
+                  className="text-base px-6 py-3 rounded-xl font-semibold bg-slate-100/90 text-slate-900 hover:bg-white"
                 >
                   Book Now
                 </Button>
@@ -59,18 +59,18 @@ export function HeroSection() {
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap gap-8 mt-12">
+            <div className="flex flex-wrap gap-6 mt-8">
               {[
-                { value: '10', label: 'Vehicles' },
+                { value: '6', label: 'Vehicles' },
                 { value: '500+', label: 'Happy Trips' },
                 { value: '24/7', label: 'Support' },
                 { value: '100%', label: 'Safe Journeys' },
               ].map((stat, index) => (
                 <div key={index} className="text-center">
-                  <p className="font-heading text-2xl md:text-3xl font-bold text-primary-foreground">
+                  <p className="text-xl md:text-2xl font-bold text-primary-foreground">
                     {stat.value}
                   </p>
-                  <p className="text-primary-foreground/60 text-sm">
+                  <p className="text-sm text-primary-foreground/60">
                     {stat.label}
                   </p>
                 </div>
@@ -83,7 +83,7 @@ export function HeroSection() {
           <div className="hidden lg:flex flex-col gap-6 items-end -mt-12">
 
             {/* Group Size */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg animate-float">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center">
                   <Users className="w-6 h-6 text-white" />
@@ -96,7 +96,7 @@ export function HeroSection() {
             </div>
 
             {/* Destination */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg mr-12">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg mr-12 animate-float" style={{ animationDelay: '0.2s' }}>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
                   <MapPin className="w-6 h-6 text-white" />
@@ -109,7 +109,7 @@ export function HeroSection() {
             </div>
 
             {/* Availability */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 shadow-lg animate-float" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-white" />
@@ -127,14 +127,14 @@ export function HeroSection() {
       </div>
 
       {/* Bottom Wave */}
-<div className="absolute bottom-0 left-0 right-0 translate-y-64">
-  <svg viewBox="0 0 1440 120" className="w-full h-auto">
-    <path
-      fill="hsl(var(--background))"
-      d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,64C960,75,1056,85,1152,80C1248,75,1344,53,1392,42.7L1440,32L1440,120L0,120Z"
-    />
-  </svg>
-</div>
+      <div className="absolute bottom-0 left-0 right-0 translate-y-4">
+        <svg viewBox="0 0 1440 120" className="w-full h-auto">
+          <path
+            fill="hsl(var(--background))"
+            d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,64C960,75,1056,85,1152,80C1248,75,1344,53,1392,42.7L1440,32L1440,120L0,120Z"
+          />
+        </svg>
+      </div>
 
     </section>
   );

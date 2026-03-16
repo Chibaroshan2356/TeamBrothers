@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { 
   LayoutDashboard, Car, FileText, BarChart3, 
   CheckCircle, Clock, XCircle, Users, TrendingUp,
-  ToggleLeft, ToggleRight, Eye
+  ToggleLeft, ToggleRight, Eye, X, MapPin, Calendar, Phone, Mail, DollarSign, MessageSquare, RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,13 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useApp } from '@/context/AppContext';
 import { BookingStatus, tripTypeLabels } from '@/data/vehicles';
 import { cn } from '@/lib/utils';
@@ -39,7 +46,6 @@ import { cn } from '@/lib/utils';
 
 const statusConfig: Record<BookingStatus, { label: string; color: string; icon: typeof Clock }> = {
   pending: { label: 'Pending', color: 'bg-warning text-warning-foreground', icon: Clock },
-  approved: { label: 'Approved', color: 'bg-success text-success-foreground', icon: CheckCircle },
   confirmed: { label: 'Confirmed', color: 'bg-blue-500 text-white', icon: CheckCircle },
   rejected: { label: 'Rejected', color: 'bg-destructive text-destructive-foreground', icon: XCircle },
   completed: { label: 'Completed', color: 'bg-primary text-primary-foreground', icon: CheckCircle },
@@ -54,8 +60,14 @@ const Admin = () => {
     toggleVehicleAvailability, 
     getAnalytics 
   } = useApp();
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [vehicleUsage, setVehicleUsage] = useState<any[]>([]);
+  const [topRoutes, setTopRoutes] = useState<any[]>([]);
+  const [monthlyBookings, setMonthlyBookings] = useState<any[]>([]);
 
   // Redirect if not admin
   useEffect(() => {
@@ -88,8 +100,84 @@ const Admin = () => {
       }
     };
 
+    const fetchAnalytics = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/analytics/analytics', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setAnalyticsData(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+      }
+    };
+
+    const fetchVehicleUsage = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/analytics/vehicle-usage', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setVehicleUsage(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching vehicle usage:', error);
+      }
+    };
+
+    const fetchTopRoutes = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/analytics/top-routes', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setTopRoutes(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching top routes:', error);
+      }
+    };
+
+    const fetchMonthlyBookings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/analytics/monthly-bookings', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setMonthlyBookings(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching monthly bookings:', error);
+      }
+    };
+
     if (isAdmin) {
       fetchBookings();
+      fetchAnalytics();
+      fetchVehicleUsage();
+      fetchTopRoutes();
+      fetchMonthlyBookings();
     }
   }, [isAdmin]);
 
@@ -97,6 +185,10 @@ const Admin = () => {
   const updateBookingStatus = async (bookingId: string, status: BookingStatus) => {
     try {
       const token = localStorage.getItem('token');
+      
+      // Find the booking to get vehicle info
+      const booking = bookings.find(b => b._id === bookingId);
+      
       const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/status`, {
         method: 'PATCH',
         headers: {
@@ -113,6 +205,40 @@ const Admin = () => {
             b._id === bookingId ? { ...b, status: updatedBooking.data.status } : b
           )
         );
+
+        // If booking is approved, make the vehicle unavailable
+        if (status === 'approved' && booking) {
+          try {
+            console.log('Approving booking:', booking);
+            console.log('Vehicle ID from booking:', booking.vehicleId);
+            console.log('Vehicle name from booking:', booking.vehicleName);
+            
+            const vehicleResponse = await fetch(`http://localhost:5000/api/vehicles/${booking.vehicleId}/availability`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({ available: false }),
+            });
+
+            console.log('Vehicle API response status:', vehicleResponse.status);
+            
+            if (vehicleResponse.ok) {
+              const vehicleData = await vehicleResponse.json();
+              console.log('Vehicle API response:', vehicleData);
+              
+              // Update vehicle availability in the context
+              toggleVehicleAvailability(booking.vehicleId);
+              console.log(`Vehicle ${booking.vehicleName} marked as unavailable`);
+            } else {
+              const errorData = await vehicleResponse.json();
+              console.error('Vehicle API error:', errorData);
+            }
+          } catch (error) {
+            console.error('Error updating vehicle availability:', error);
+          }
+        }
       } else {
         console.error('Failed to update booking status');
       }
@@ -121,35 +247,48 @@ const Admin = () => {
     }
   };
 
-  if (!isAdmin) return null;
-
-  // Calculate analytics from fetched bookings
-  const analytics = {
-    totalEnquiries: bookings.length,
-    pendingEnquiries: bookings.filter(b => b.status === 'pending').length,
-    approvedEnquiries: bookings.filter(b => b.status === 'approved').length,
-    mostRequestedVehicle: (() => {
-      const vehicleRequests: Record<string, number> = {};
-      bookings.forEach(b => {
-        vehicleRequests[b.vehicleName] = (vehicleRequests[b.vehicleName] || 0) + 1;
-      });
-      
-      let mostRequested = null;
-      Object.entries(vehicleRequests).forEach(([name, count]) => {
-        if (!mostRequested || count > mostRequested.count) {
-          mostRequested = { name, count };
-        }
-      });
-      return mostRequested;
-    })(),
-    tripTypeDistribution: (() => {
-      const distribution: Record<string, number> = {};
-      bookings.forEach(b => {
-        distribution[b.tripType] = (distribution[b.tripType] || 0) + 1;
-      });
-      return distribution;
-    })(),
+  // View trip details
+  const viewTripDetails = (booking: any) => {
+    console.log('Opening trip details for booking:', booking);
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+    
+    // Auto-refresh booking data to get latest feedback
+    setTimeout(() => {
+      refreshBookingData(booking._id);
+    }, 500);
   };
+
+  // Refresh booking data to get latest feedback
+  const refreshBookingData = async (bookingId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const updatedBooking = await response.json();
+        console.log('Updated booking data:', updatedBooking.data);
+        
+        // Update the selected booking with fresh data
+        setSelectedBooking(updatedBooking.data);
+        
+        // Also update the booking in the list
+        setBookings(prev =>
+          prev.map(b =>
+            b._id === bookingId ? updatedBooking.data : b
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error refreshing booking data:', error);
+    }
+  };
+
+  if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-muted/30 py-12">
@@ -168,62 +307,173 @@ const Admin = () => {
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Enquiries</p>
-                  <p className="font-heading text-3xl font-bold">{analytics.totalEnquiries}</p>
-                </div>
-                <FileText className="w-10 h-10 text-primary/20" />
-              </div>
-            </CardContent>
-          </Card>
+        {analyticsData && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-6">Analytics Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analyticsData.totalUsers}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Vehicles</CardTitle>
+                  <Car className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analyticsData.totalVehicles}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Vehicles</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analyticsData.activeVehicles}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Enquiries</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analyticsData.totalEnquiries}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Completed Trips</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analyticsData.completedTrips}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">₹{analyticsData.totalRevenue.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{analyticsData.avgRating}/5</div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{bookings.filter(b => b.status === 'pending').length}</div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="font-heading text-3xl font-bold text-warning">{analytics.pendingEnquiries}</p>
-                </div>
-                <Clock className="w-10 h-10 text-warning/20" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* Charts Section */}
+        {(vehicleUsage.length > 0 || monthlyBookings.length > 0) && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-6">Analytics Charts</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Vehicle Usage Chart */}
+              {vehicleUsage.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Vehicle Usage</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={vehicleUsage}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="_id" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="trips" fill="#10b981" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Monthly Bookings Chart */}
+              {monthlyBookings.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Monthly Bookings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={monthlyBookings}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="bookings" fill="#3b82f6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Approved</p>
-                  <p className="font-heading text-3xl font-bold text-success">{analytics.approvedEnquiries}</p>
+        {/* Top Routes */}
+        {topRoutes.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-6">Top Routes</h2>
+            <Card>
+              <CardHeader>
+                <CardTitle>Most Popular Routes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {topRoutes.map((route, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-medium">{route.route}</p>
+                          <p className="text-sm text-muted-foreground">{route.trips} trips</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">₹{route.revenue.toLocaleString()}</p>
+                        <p className="text-sm text-muted-foreground">Revenue</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <CheckCircle className="w-10 h-10 text-success/20" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Most Requested</p>
-                  <p className="font-heading text-lg font-bold truncate">
-                    {analytics.mostRequestedVehicle?.name || 'N/A'}
-                  </p>
-                  {analytics.mostRequestedVehicle && (
-                    <p className="text-xs text-muted-foreground">
-                      {analytics.mostRequestedVehicle.count} requests
-                    </p>
-                  )}
-                </div>
-                <TrendingUp className="w-10 h-10 text-primary/20" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Vehicle Management */}
@@ -301,11 +551,17 @@ const Admin = () => {
                         <TableHead>Date</TableHead>
                         <TableHead>Cost</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {bookings.slice(0, 10).map(booking => {
-                        const StatusIcon = statusConfig[booking.status].icon;
+                        const statusInfo = statusConfig[booking.status] || {
+                          label: booking.status,
+                          color: 'bg-gray-500 text-white',
+                          icon: Clock
+                        };
+                        const StatusIcon = statusInfo.icon;
                         return (
                           <TableRow key={booking._id}>
                             <TableCell>
@@ -335,8 +591,8 @@ const Admin = () => {
                               >
                                 <SelectTrigger className="w-32">
                                   <SelectValue>
-                                    <Badge className={statusConfig[booking.status].color}>
-                                      {statusConfig[booking.status].label}
+                                    <Badge className={statusInfo.color}>
+                                      {statusInfo.label}
                                     </Badge>
                                   </SelectValue>
                                 </SelectTrigger>
@@ -350,6 +606,16 @@ const Admin = () => {
                                   ))}
                                 </SelectContent>
                               </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => viewTripDetails(booking)}
+                                className="text-primary hover:text-primary/80"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         );
@@ -370,33 +636,229 @@ const Admin = () => {
           </Card>
         </div>
 
-        {/* Trip Type Distribution */}
-        {Object.keys(analytics.tripTypeDistribution).length > 0 && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                Trip Type Distribution
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4">
-                {Object.entries(analytics.tripTypeDistribution).map(([type, count]) => (
-                  <div 
-                    key={type}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg bg-accent"
-                  >
-                    <Users className="w-5 h-5 text-primary" />
+      {/* Trip Details Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Trip Details
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedBooking && (
+            <div className="space-y-6">
+              {/* Customer Information */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Customer Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
                     <div>
-                      <p className="font-medium">{tripTypeLabels[type as keyof typeof tripTypeLabels]}</p>
-                      <p className="text-sm text-muted-foreground">{count} bookings</p>
+                      <p className="text-sm text-muted-foreground">Name</p>
+                      <p className="font-medium">{selectedBooking.customerName}</p>
                     </div>
                   </div>
-                ))}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Phone className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Phone</p>
+                      <p className="font-medium">{selectedBooking.customerPhone}</p>
+                    </div>
+                  </div>
+                  {selectedBooking.customerEmail && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Email</p>
+                        <p className="font-medium">{selectedBooking.customerEmail}</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Badge className={statusConfig[selectedBooking.status].color}>
+                        {statusConfig[selectedBooking.status].label}
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <p className="font-medium">{statusConfig[selectedBooking.status].label}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+
+              {/* Trip Information */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  Trip Information
+                </h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Pickup Location</p>
+                        <p className="font-medium">{selectedBooking.pickupLocation}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Drop Location</p>
+                        <p className="font-medium">{selectedBooking.dropLocation}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Pickup Date</p>
+                        <p className="font-medium">{selectedBooking.pickupDate}</p>
+                      </div>
+                    </div>
+                    {selectedBooking.returnDate && selectedBooking.returnDate !== selectedBooking.pickupDate && (
+                      <div className="flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Return Date</p>
+                          <p className="font-medium">{selectedBooking.returnDate}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Pickup Time</p>
+                        <p className="font-medium">{selectedBooking.pickupTime}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <Car className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Vehicle</p>
+                        <p className="font-medium">{selectedBooking.vehicleName}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Users className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Trip Type</p>
+                        <p className="font-medium">{tripTypeLabels[selectedBooking.tripType]}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cost Information */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Cost Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3">
+                    <DollarSign className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Estimated Cost</p>
+                      <p className="font-medium text-lg">₹{selectedBooking.estimatedCost?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {selectedBooking.distance && (
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Distance</p>
+                        <p className="font-medium">{selectedBooking.distance} km</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Notes */}
+              {selectedBooking.notes && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Additional Notes
+                  </h3>
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="text-sm">{selectedBooking.notes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Customer Feedback */}
+              {selectedBooking.feedback && (
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5" />
+                      Customer Feedback
+                    </h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => refreshBookingData(selectedBooking._id)}
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Refresh
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {/* Feedback Text */}
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-gray-700">
+                        "{selectedBooking.feedback}"
+                      </p>
+                    </div>
+                    
+                    {/* Feedback Date */}
+                    {selectedBooking.feedbackDate && (
+                      <div className="text-xs text-muted-foreground">
+                        Submitted on: {new Date(selectedBooking.feedbackDate).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* No Feedback Message */}
+              {selectedBooking.status === 'completed' && !selectedBooking.feedback && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5" />
+                    Customer Feedback
+                  </h3>
+                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-sm text-gray-500 italic">
+                      No feedback submitted yet for this completed trip.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   );

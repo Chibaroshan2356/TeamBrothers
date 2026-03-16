@@ -12,11 +12,16 @@
 */
 
 @layer base {
+  html {
+    /* Global font size override - 80% of default */
+    font-size: 80%;
+    scroll-behavior: smooth;
+  }
+  
   :root {
     /* Core brand colors */
     --background: 210 20% 98%;
     --foreground: 200 25% 15%;
-
     --card: 0 0% 100%;
     --card-foreground: 200 25% 15%;
 
@@ -27,22 +32,29 @@
     --primary: 175 60% 35%;
     --primary-foreground: 0 0% 100%;
 
-    /* Vibrant orange - energy & adventure */
-    --secondary: 25 95% 58%;
-    --secondary-foreground: 0 0% 100%;
+    /* Warm amber - adventure & energy */
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 48 96% 89%;
 
-    --muted: 210 15% 92%;
-    --muted-foreground: 200 15% 45%;
+    /* Muted grays - professional */
+    --muted: 210 40% 98%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 175 50% 95%;
-    --accent-foreground: 175 60% 25%;
+    /* Accent colors */
+    --accent: 210 40% 98%;
+    --accent-foreground: 215 20% 65%;
 
+    /* Destructive - alerts */
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 210 20% 98%;
 
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 175 60% 35%;
+    /* Border & ring */
+    --border: 215 20% 65%;
+    --ring: 215 20% 65%;
+
+    /* Custom gradients */
+    --gradient-start: 175 60% 35%;
+    --gradient-end: 145 64% 51%;
 
     --radius: 0.75rem;
 

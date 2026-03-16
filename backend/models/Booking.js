@@ -91,6 +91,13 @@ const bookingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    feedback: {
+      type: String,
+      default: "",
+    },
+    feedbackDate: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

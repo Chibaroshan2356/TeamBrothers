@@ -15,10 +15,8 @@ import {
   Check,
   AlertCircle,
   Car,
-  Star,
-  Trophy,
-  Award,
-  Coins
+  MessageSquare,
+  Star
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +49,9 @@ const Dashboard: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [feedbackBookingId, setFeedbackBookingId] = useState<string | null>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const fetchUserBookings = useCallback(async () => {
     try {
@@ -159,6 +160,91 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleSubmitFeedback = async () => {
+    if (!feedbackBookingId || !feedbackText.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide feedback text",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('Submitting feedback:', {
+      bookingId: feedbackBookingId,
+      feedback: feedbackText.trim(),
+    });
+
+    try {
+      setSubmittingFeedback(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/bookings/feedback', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId: feedbackBookingId,
+          feedback: feedbackText.trim(),
+        }),
+      });
+
+      console.log('Feedback response status:', response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("Invalid server response");
+      }
+      
+      console.log('Feedback response data:', data);
+
+      if (data.success) {
+        toast({
+          title: "Feedback Submitted",
+          description: "Thank you for your feedback! It has been sent to admin.",
+        });
+        
+        // Reset feedback form
+        setFeedbackBookingId(null);
+        setFeedbackText('');
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to submit feedback",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        toast({
+          title: "Network Error",
+          description: "Unable to connect to server. Please check your internet connection.",
+          variant: "destructive",
+        });
+      } else if (error instanceof SyntaxError) {
+        toast({
+          title: "Server Error", 
+          description: "Server is not responding correctly. Please try again later.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to submit feedback. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants = {
       pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -200,7 +286,7 @@ const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8"></div>
       </div>
     );
   }
@@ -242,107 +328,6 @@ const Dashboard: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Car className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm">Total Bookings: {bookings.length}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Rewards Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              Rewards & Loyalty
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Tier Badge */}
-              <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg">
-                <div className="flex justify-center mb-2">
-                  {user?.tier === 'gold' && <Award className="w-8 h-8 text-yellow-600" />}
-                  {user?.tier === 'silver' && <Trophy className="w-8 h-8 text-gray-400" />}
-                  {user?.tier === 'bronze' && <Star className="w-8 h-8 text-orange-600" />}
-                </div>
-                <div className="text-2xl font-bold capitalize mb-1">{user?.tier || 'Bronze'}</div>
-                <div className="text-sm text-muted-foreground">Member Tier</div>
-              </div>
-
-              {/* Reward Points */}
-              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-                <div className="flex justify-center mb-2">
-                  <Coins className="w-8 h-8 text-blue-600" />
-                </div>
-                <div className="text-2xl font-bold mb-1">{user?.rewardPoints || 0}</div>
-                <div className="text-sm text-muted-foreground">Reward Points</div>
-              </div>
-
-              {/* Total Trips */}
-              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-                <div className="flex justify-center mb-2">
-                  <Car className="w-8 h-8 text-green-600" />
-                </div>
-                <div className="text-2xl font-bold mb-1">{user?.totalBookings || 0}</div>
-                <div className="text-sm text-muted-foreground">Completed Trips</div>
-              </div>
-            </div>
-
-            {/* Progress to Next Tier */}
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Progress to {user?.tier === 'gold' ? 'Max Level' : user?.tier === 'silver' ? 'Gold' : 'Silver'}</span>
-                <span className="text-sm text-muted-foreground">
-                  {user?.tier === 'gold' ? '500+ points' : 
-                   user?.tier === 'silver' ? `${500 - (user?.rewardPoints || 0)} points to Gold` : 
-                   `${200 - (user?.rewardPoints || 0)} points to Silver`}
-                </span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: user?.tier === 'gold' ? '100%' : 
-                           user?.tier === 'silver' ? `${Math.min(((user?.rewardPoints || 0) - 200) / 3, 100)}%` :
-                           `${Math.min(((user?.rewardPoints || 0) / 200) * 100, 100)}%`
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Benefits */}
-            <div className="mt-4">
-              <h4 className="font-medium mb-3">Your Benefits</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    user?.tier === 'bronze' ? 'bg-orange-500' :
-                    user?.tier === 'silver' ? 'bg-gray-400' : 'bg-yellow-500'
-                  }`} />
-                  <span className="text-muted-foreground">
-                    {user?.tier === 'bronze' ? '50 points per trip' :
-                     user?.tier === 'silver' ? '75 points per trip' : '100 points per trip'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    user?.tier === 'bronze' ? 'bg-orange-500' :
-                    user?.tier === 'silver' ? 'bg-gray-400' : 'bg-yellow-500'
-                  }`} />
-                  <span className="text-muted-foreground">
-                    {user?.tier === 'bronze' ? 'Standard support' :
-                     user?.tier === 'silver' ? 'Priority support' : 'VIP support'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    user?.tier === 'bronze' ? 'bg-orange-500' :
-                    user?.tier === 'silver' ? 'bg-gray-400' : 'bg-yellow-500'
-                  }`} />
-                  <span className="text-muted-foreground">
-                    {user?.tier === 'bronze' ? 'Basic rewards' :
-                     user?.tier === 'silver' ? 'Enhanced rewards' : 'Premium rewards'}
-                  </span>
-                </div>
               </div>
             </div>
           </CardContent>
@@ -440,6 +425,21 @@ const Dashboard: React.FC = () => {
                         >
                           Contact Support
                         </Button>
+                        
+                        {booking.status === 'completed' && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => {
+                              setFeedbackBookingId(booking._id);
+                              setFeedbackText('');
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Leave Feedback
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -449,6 +449,51 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Feedback Modal */}
+      {feedbackBookingId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold mb-4">Leave Feedback</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Share your experience about this trip
+            </p>
+            
+            <div className="space-y-4">
+              {/* Feedback Text */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Your Feedback</label>
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Tell us about your experience..."
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={4}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFeedbackBookingId(null);
+                    setFeedbackText('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitFeedback}
+                  disabled={submittingFeedback || !feedbackText.trim()}
+                >
+                  {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

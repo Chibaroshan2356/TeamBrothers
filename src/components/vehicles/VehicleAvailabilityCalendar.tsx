@@ -34,19 +34,34 @@ export const VehicleAvailabilityCalendar: React.FC<VehicleAvailabilityCalendarPr
   const fetchBookedDates = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/availability/booked-dates/${vehicleId}`);
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // For now, use mock data since API endpoint doesn't exist
+      // TODO: Implement backend API endpoint: /api/availability/booked-dates/${vehicleId}
+      const mockBookedDates = [
+        {
+          pickupDate: '2024-01-15',
+          returnDate: '2024-01-17'
+        },
+        {
+          pickupDate: '2024-01-25',
+          returnDate: '2024-01-27'
+        }
+      ];
       
-      const data = await response.json();
-
-      if (data.success) {
-        setBookedDates(data.bookedDates);
-      } else {
-        setError('Failed to load availability');
-      }
+      setBookedDates(mockBookedDates);
+      setError(null);
+      
+      // Uncomment when backend API is ready:
+      // const response = await fetch(`http://localhost:5000/api/availability/booked-dates/${vehicleId}`);
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
+      // const data = await response.json();
+      // if (data.success) {
+      //   setBookedDates(data.bookedDates);
+      // } else {
+      //   setError('Failed to load availability');
+      // }
     } catch (err) {
       console.error('Error fetching booked dates:', err);
       setError('Error loading availability');

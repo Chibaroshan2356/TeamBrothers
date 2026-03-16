@@ -5,7 +5,7 @@ interface AppContextType {
   // Authentication
   isAuthenticated: boolean;
   isAdmin: boolean;
-  user: { name: string; email: string; role: string; createdAt?: string; rewardPoints?: number; tier?: string; totalBookings?: number } | null;
+  user: { name: string; email: string; photo?: string; role: string; createdAt?: string; rewardPoints?: number; tier?: string; totalBookings?: number } | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   setIsAdmin: (value: boolean) => void;

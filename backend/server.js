@@ -30,6 +30,10 @@ const bookingRoutes = require('./routes/bookings');
 
 const contactRoutes = require('./routes/contact');
 
+const analyticsRoutes = require('./api/analytics');
+
+const vehiclesRoutes = require('./routes/vehicles');
+
 
 
 const app = express();
@@ -65,6 +69,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 
 app.use('/api/contact', contactRoutes);
+
+app.use('/api/analytics', analyticsRoutes);
+
+app.use('/api/vehicles', vehiclesRoutes);
 
 
 
