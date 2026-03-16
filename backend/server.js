@@ -50,7 +50,10 @@ app.use(express.json());
 
 app.use(cors());
 
-
+// Root route for Render health check
+app.get('/', (req, res) => {
+  res.send('TeamBrothers API running successfully 🚀');
+});
 
 // Dev logging middleware
 
