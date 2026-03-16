@@ -75,7 +75,6 @@ npm start
 ```javascript
 // In browser console:
 console.log(import.meta.env.VITE_FIREBASE_API_KEY)
-// Should show: AIzaSyABk3JiXqo0-16xfYk6GkhfmGFL3hMZUYY
 ```
 
 ### Common Issues
