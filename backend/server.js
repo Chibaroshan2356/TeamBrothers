@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
-const path = require('path');
 
 // Load environment variables
 require('dotenv').config();
@@ -23,14 +22,21 @@ const app = express();
 app.use(express.json());
 
 // Enable CORS
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://team-brothers-eight.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
-// Root health check route (important for Render)
+// Root health check route
 app.get("/", (req, res) => {
   res.send("TeamBrothers API running 🚀");
 });
 
-// Logging middleware (only in development)
+// Logging middleware (development only)
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
@@ -56,7 +62,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Use Render's dynamic port
+// Use Render dynamic port
 const PORT = process.env.PORT || 5000;
 
 // Start server
@@ -66,7 +72,7 @@ const server = app.listen(PORT, () => {
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.log(`❌ Error: ${err.message}`);
+  console.error(`❌ Error: ${err.message}`);
 
   server.close(() => {
     process.exit(1);
