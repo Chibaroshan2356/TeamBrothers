@@ -1,22 +1,18 @@
 const admin = require("firebase-admin");
-const fs = require("fs");
-
-let serviceAccount;
 
 try {
-  // Try production path first
-  const prodPath = "/etc/secrets/firebase-service-account.json";
-  
-  if (fs.existsSync(prodPath)) {
-    serviceAccount = require(prodPath);
-    console.log("✅ Firebase Admin initialized (production)");
-  } else {
-    // Fallback to local development (comment out in production)
-    // serviceAccount = require("./firebase-service-account.json");
-    console.warn("⚠️ Firebase service account file not found - Firebase features disabled");
-  }
+  // Use environment variables instead of file
+  const serviceAccount = {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
+  };
 
-  if (serviceAccount) {
+  // Check if all required environment variables are present
+  if (!serviceAccount.projectId || !serviceAccount.clientEmail || !serviceAccount.privateKey) {
+    console.warn("⚠️ Firebase environment variables not found - Firebase features disabled");
+    console.log("Required env vars: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY");
+  } else {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
