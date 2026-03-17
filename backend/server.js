@@ -25,6 +25,7 @@ const contactRoutes = require('./routes/contact');
 const analyticsRoutes = require('./api/analytics');
 const vehiclesRoutes = require('./routes/vehicles');
 const createAdminRoutes = require('./routes/createAdmin');
+const enquiriesRoutes = require('./routes/enquiries');
 
 const app = express();
 
@@ -37,7 +38,7 @@ app.use(cors({
     "http://localhost:5173",
     "https://team-brothers-eight.vercel.app"
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true
 }));
 
@@ -58,6 +59,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/vehicles', vehiclesRoutes);
 app.use('/api/create-admin', createAdminRoutes);
+app.use('/api/enquiries', enquiriesRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
