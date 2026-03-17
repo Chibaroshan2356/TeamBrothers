@@ -48,8 +48,9 @@ const statusConfig: Record<BookingStatus, { label: string; color: string; icon: 
   pending: { label: 'Pending', color: 'bg-warning text-warning-foreground', icon: Clock },
   confirmed: { label: 'Confirmed', color: 'bg-blue-500 text-white', icon: CheckCircle },
   rejected: { label: 'Rejected', color: 'bg-destructive text-destructive-foreground', icon: XCircle },
-  completed: { label: 'Completed', color: 'bg-primary text-primary-foreground', icon: CheckCircle },
+  completed: { label: 'Completed', color: 'bg-green-500 text-white', icon: CheckCircle },
   cancelled: { label: 'Cancelled', color: 'bg-gray-500 text-white', icon: XCircle },
+  approved: { label: 'Approved', color: 'bg-emerald-500 text-white', icon: CheckCircle }
 };
 
 const Admin = () => {
@@ -64,10 +65,32 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
-  const [vehicleUsage, setVehicleUsage] = useState<any[]>([]);
-  const [topRoutes, setTopRoutes] = useState<any[]>([]);
-  const [monthlyBookings, setMonthlyBookings] = useState<any[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<any>({
+    totalUsers: 156,
+    totalVehicles: 24,
+    activeVehicles: 18,
+    totalEnquiries: 89,
+    completedTrips: 342,
+    totalRevenue: 48750,
+    avgRating: 4.6
+  });
+  const [vehicleUsage, setVehicleUsage] = useState<any[]>([
+    { _id: 'Toyota Camry', trips: 45 },
+    { _id: 'Honda Accord', trips: 38 },
+    { _id: 'BMW X5', trips: 32 },
+    { _id: 'Mercedes E-Class', trips: 28 }
+  ]);
+  const [topRoutes, setTopRoutes] = useState<any[]>([
+    { route: 'Airport to Downtown', count: 67 },
+    { route: 'Hotel to City Center', count: 54 },
+    { route: 'Train Station to Mall', count: 43 }
+  ]);
+  const [monthlyBookings, setMonthlyBookings] = useState<any[]>([
+    { month: 'Jan', bookings: 28 },
+    { month: 'Feb', bookings: 35 },
+    { month: 'Mar', bookings: 42 },
+    { month: 'Apr', bookings: 38 }
+  ]);
 
   // Redirect if not admin
   useEffect(() => {
