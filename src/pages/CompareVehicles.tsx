@@ -34,7 +34,7 @@ export const CompareVehicles: React.FC<CompareVehiclesProps> = () => {
   useEffect(() => {
     // Load selected vehicles from localStorage
     const stored = localStorage.getItem('compareVehicles');
-    if (stored) {
+    if (stored && stored !== 'undefined') {
       try {
         const vehicles = JSON.parse(stored);
         setSelectedVehicles(vehicles);

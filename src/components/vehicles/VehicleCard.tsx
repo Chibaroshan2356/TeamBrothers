@@ -32,11 +32,12 @@ export function VehicleCard({
   useEffect(() => {
     const loadCompareVehicles = () => {
       const stored = localStorage.getItem("compareVehicles");
-      if (stored) {
+      if (stored && stored !== 'undefined') {
         try {
           setCompareVehicles(JSON.parse(stored));
         } catch (error) {
           console.error("Failed to load compare vehicles:", error);
+          setCompareVehicles([]);
         }
       } else {
         setCompareVehicles([]);

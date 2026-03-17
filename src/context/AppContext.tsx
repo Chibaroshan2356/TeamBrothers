@@ -37,7 +37,12 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
   if (typeof window === 'undefined') return defaultValue;
   const stored = localStorage.getItem(key);
-  return stored ? JSON.parse(stored) : defaultValue;
+  try {
+    return stored && stored !== 'undefined' ? JSON.parse(stored) : defaultValue;
+  } catch (error) {
+    console.error(`Error parsing ${key} from localStorage:`, error);
+    return defaultValue;
+  }
 };
 
 // Save data to localStorage
@@ -68,7 +73,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
   const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(() => {
     const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
+    try {
+      return storedUser && storedUser !== 'undefined' ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      console.error('Error parsing stored user:', error);
+      return null;
+    }
   });
 
   // Admin credentials (in a real app, this would be handled by a backend)
