@@ -166,12 +166,15 @@ router.post('/google', async (req, res) => {
         name: name || email.split('@')[0],
         email,
         googleId: uid,
-        role: 'user',
+        role: email === 'chibaroshan23@gmail.com' ? 'admin' : 'user', // Auto-promote admin email
         password: 'google-oauth-' + uid, // Placeholder password for Google users
       });
       
       await user.save();
       console.log('✅ New Google user created:', user._id);
+      if (email === 'chibaroshan23@gmail.com') {
+        console.log('👑 Created chibaroshan23@gmail.com as admin');
+      }
     } else {
       console.log('✅ Existing user found, linking Google account');
       // Update existing user with Google ID if not already set
@@ -179,6 +182,13 @@ router.post('/google', async (req, res) => {
         user.googleId = uid;
         await user.save();
         console.log('🔗 Google ID linked to existing user');
+      }
+      
+      // Auto-promote chibaroshan23@gmail.com to admin
+      if (user.email === 'chibaroshan23@gmail.com' && user.role !== 'admin') {
+        user.role = 'admin';
+        await user.save();
+        console.log('👑 Auto-promoted chibaroshan23@gmail.com to admin role');
       }
     }
 
