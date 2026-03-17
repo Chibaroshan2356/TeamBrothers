@@ -26,6 +26,7 @@ const analyticsRoutes = require('./api/analytics');
 const vehiclesRoutes = require('./routes/vehicles');
 const createAdminRoutes = require('./routes/createAdmin');
 const enquiriesRoutes = require('./routes/enquiries');
+const feedbackRoutes = require('./routes/feedback');
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/vehicles', vehiclesRoutes);
 app.use('/api/create-admin', createAdminRoutes);
 app.use('/api/enquiries', enquiriesRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
