@@ -144,6 +144,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const refreshVehicleData = () => {
+    setVehicles([...initialVehicles]);
+  };
+
   const addBooking = (bookingData: Omit<Booking, 'id' | 'createdAt'>): Booking => {
     const newBooking: Booking = {
       ...bookingData,
