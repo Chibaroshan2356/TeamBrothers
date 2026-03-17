@@ -3,8 +3,14 @@ const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
 
-// Load environment variables
+// Load env variables
 require('dotenv').config();
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (err) => {
+  console.error("❌ Uncaught Exception:", err.message);
+  process.exit(1);
+});
 
 // Connect to MongoDB
 connectDB();
@@ -21,7 +27,7 @@ const app = express();
 // Body parser
 app.use(express.json());
 
-// Enable CORS
+// CORS (for Vercel frontend)
 app.use(cors({
   origin: [
     "http://localhost:5173",
@@ -31,17 +37,17 @@ app.use(cors({
   credentials: true
 }));
 
-// Root health check route
+// Health check route
 app.get("/", (req, res) => {
   res.send("TeamBrothers API running 🚀");
 });
 
-// Logging middleware (development only)
+// Logging (dev only)
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Mount routers
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/contact', contactRoutes);
@@ -62,11 +68,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Use Render dynamic port
+// PORT (Render uses dynamic port)
 const PORT = process.env.PORT || 5000;
 
 // Start server
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
 
@@ -74,7 +80,5 @@ const server = app.listen(PORT, () => {
 process.on('unhandledRejection', (err) => {
   console.error(`❌ Error: ${err.message}`);
 
-  server.close(() => {
-    process.exit(1);
-  });
+  server.close(() => process.exit(1));
 });
