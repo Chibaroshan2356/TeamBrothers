@@ -81,7 +81,7 @@ const Admin = () => {
     const fetchBookings = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/bookings', {
+        const response = await fetch('https://teambrothers.onrender.com/api/bookings', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -103,7 +103,7 @@ const Admin = () => {
     const fetchAnalytics = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/analytics/analytics', {
+        const response = await fetch('https://teambrothers.onrender.com/api/analytics/analytics', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -121,7 +121,7 @@ const Admin = () => {
     const fetchVehicleUsage = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/analytics/vehicle-usage', {
+        const response = await fetch('https://teambrothers.onrender.com/api/analytics/vehicle-usage', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -139,7 +139,7 @@ const Admin = () => {
     const fetchTopRoutes = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/analytics/top-routes', {
+        const response = await fetch('https://teambrothers.onrender.com/api/analytics/top-routes', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -157,7 +157,7 @@ const Admin = () => {
     const fetchMonthlyBookings = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/analytics/monthly-bookings', {
+        const response = await fetch('https://teambrothers.onrender.com/api/analytics/monthly-bookings', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -189,7 +189,7 @@ const Admin = () => {
       // Find the booking to get vehicle info
       const booking = bookings.find(b => b._id === bookingId);
       
-      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/status`, {
+      const response = await fetch(`https://teambrothers.onrender.com/api/bookings/${bookingId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -213,7 +213,7 @@ const Admin = () => {
             console.log('Vehicle ID from booking:', booking.vehicleId);
             console.log('Vehicle name from booking:', booking.vehicleName);
             
-            const vehicleResponse = await fetch(`http://localhost:5000/api/vehicles/${booking.vehicleId}/availability`, {
+            const vehicleResponse = await fetch(`https://teambrothers.onrender.com/api/vehicles/${booking.vehicleId}/availability`, {
               method: 'PATCH',
               headers: {
                 'Content-Type': 'application/json',
@@ -263,7 +263,7 @@ const Admin = () => {
   const refreshBookingData = async (bookingId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+      const response = await fetch(`https://teambrothers.onrender.com/api/bookings/${bookingId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

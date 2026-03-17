@@ -1,6 +1,6 @@
 // API utility for consistent API calls across the application
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = 'https://teambrothers.onrender.com'; // Force production URL
 
 export const API = {
   // Base URL

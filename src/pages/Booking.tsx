@@ -151,7 +151,7 @@ const Booking = () => {
       });
 
       const response = await fetch(
-        `http://localhost:5000/api/bookings/availability?vehicleId=${selectedVehicle.id}&pickupDate=${pickup.toISOString()}&returnDate=${returnD.toISOString()}`
+        `https://teambrothers.onrender.com/api/bookings/availability?vehicleId=${selectedVehicle.id}&pickupDate=${pickup.toISOString()}&returnDate=${returnD.toISOString()}`
       );
       
       if (!response.ok) {
@@ -270,7 +270,7 @@ const Booking = () => {
         notes: notes || undefined,
       };
 
-      const response = await fetch('http://localhost:5000/api/bookings', {
+      const response = await fetch('https://teambrothers.onrender.com/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

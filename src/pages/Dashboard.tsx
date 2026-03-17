@@ -65,7 +65,7 @@ const Dashboard: React.FC = () => {
         return;
       }
       
-      const response = await fetch('http://localhost:5000/api/bookings/my', {
+      const response = await fetch('https://teambrothers.onrender.com/api/bookings/my', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -117,7 +117,7 @@ const Dashboard: React.FC = () => {
     try {
       setCancellingId(bookingId);
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/cancel`, {
+      const response = await fetch(`https://teambrothers.onrender.com/api/bookings/${bookingId}/cancel`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -178,7 +178,7 @@ const Dashboard: React.FC = () => {
     try {
       setSubmittingFeedback(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/bookings/feedback', {
+      const response = await fetch('https://teambrothers.onrender.com/api/bookings/feedback', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
