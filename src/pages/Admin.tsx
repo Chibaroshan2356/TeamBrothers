@@ -92,12 +92,16 @@ const Admin = () => {
     { month: 'Apr', bookings: 38 }
   ]);
 
-  // Redirect if not admin
+  // Redirect if not admin (only chibaroshan23@gmail.com)
   useEffect(() => {
-    if (!isAdmin) {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userEmail = user.email;
+    
+    if (userEmail !== 'chibaroshan23@gmail.com') {
+      console.log('Access denied: User email is not chibaroshan23@gmail.com');
       navigate('/');
     }
-  }, [isAdmin, navigate]);
+  }, [navigate]);
 
   // Fetch bookings from backend
   useEffect(() => {
