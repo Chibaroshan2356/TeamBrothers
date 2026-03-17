@@ -390,7 +390,7 @@ const Admin = () => {
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{analyticsData.totalRevenue.toLocaleString()}</div>
+                  <div className="text-2xl font-bold">₹{(analyticsData.totalRevenue || 0).toLocaleString()}</div>
                 </CardContent>
               </Card>
               
@@ -487,7 +487,7 @@ const Admin = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">₹{route.revenue.toLocaleString()}</p>
+                        <p className="font-medium">₹{(route.revenue || 0).toLocaleString()}</p>
                         <p className="text-sm text-muted-foreground">Revenue</p>
                       </div>
                     </div>
@@ -605,7 +605,7 @@ const Admin = () => {
                               <p className="text-sm">{booking.pickupDate}</p>
                             </TableCell>
                             <TableCell>
-                              <p className="font-medium">₹{booking.estimatedCost.toLocaleString()}</p>
+                              <p className="font-medium">₹{(booking.estimatedCost || 0).toLocaleString()}</p>
                             </TableCell>
                             <TableCell>
                               <Select
@@ -800,7 +800,7 @@ const Admin = () => {
                     <DollarSign className="w-5 h-5 text-primary" />
                     <div>
                       <p className="text-sm text-muted-foreground">Estimated Cost</p>
-                      <p className="font-medium text-lg">₹{selectedBooking.estimatedCost?.toLocaleString()}</p>
+                      <p className="font-medium text-lg">₹{(selectedBooking.estimatedCost || 0)?.toLocaleString()}</p>
                     </div>
                   </div>
                   {selectedBooking.distance && (
