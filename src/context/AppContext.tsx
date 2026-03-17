@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { API } from '@/utils/api';
+import { safeParseJSON, safeSetItem, safeRemoveItem, clearCorruptedStorage } from '@/utils/localStorage';
 import { vehicles as initialVehicles, Vehicle, Booking, BookingStatus } from '@/data/vehicles';
 
 interface AppContextType {
@@ -53,33 +54,24 @@ const saveToStorage = <T,>(key: string, value: T): void => {
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => 
-    loadFromStorage('vehicles', initialVehicles)
-  );
+  // Clear any corrupted localStorage items on startup
+  useEffect(() => {
+    clearCorruptedStorage();
+  }, []);
 
-  // Function to refresh vehicle data from initial import
-  const refreshVehicleData = () => {
-    localStorage.removeItem('vehicles');
-    setVehicles(initialVehicles);
-  };
+  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [bookings, setBookings] = useState<Booking[]>(() => 
-    loadFromStorage('bookings', [])
+    safeParseJSON('bookings', [])
   );
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => 
-    localStorage.getItem('isAuthenticated') === 'true'
+    safeParseJSON('isAuthenticated', false)
   );
   const [isAdmin, setIsAdmin] = useState<boolean>(() => 
-    localStorage.getItem('isAdmin') === 'true'
+    safeParseJSON('isAdmin', false)
   );
-  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(() => {
-    const storedUser = localStorage.getItem('user');
-    try {
-      return storedUser && storedUser !== 'undefined' ? JSON.parse(storedUser) : null;
-    } catch (error) {
-      console.error('Error parsing stored user:', error);
-      return null;
-    }
-  });
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(() => 
+    safeParseJSON('user', null)
+  );
 
   // Admin credentials (in a real app, this would be handled by a backend)
   const ADMIN_EMAIL = 'admin23@gmail.com';
@@ -116,31 +108,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsAuthenticated(false);
     setIsAdmin(false);
     setUser(null);
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('isAdmin');
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    safeRemoveItem('isAuthenticated');
+    safeRemoveItem('isAdmin');
+    safeRemoveItem('user');
+    safeRemoveItem('token');
   };
 
   // Persist vehicles to localStorage
   useEffect(() => {
-    saveToStorage('vehicles', vehicles);
+    safeSetItem('vehicles', vehicles);
   }, [vehicles]);
 
   // Persist bookings to localStorage
   useEffect(() => {
-    saveToStorage('bookings', bookings);
+    safeSetItem('bookings', bookings);
   }, [bookings]);
 
   // Persist admin state
   useEffect(() => {
-    saveToStorage('isAdmin', isAdmin);
+    safeSetItem('isAdmin', isAdmin);
   }, [isAdmin]);
 
   // Persist user state
   useEffect(() => {
     if (user) {
-      saveToStorage('user', user);
+      safeSetItem('user', user);
     }
   }, [user]);
 
