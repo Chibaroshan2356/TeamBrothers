@@ -7,17 +7,23 @@ const User = require('../models/User');
 // @access  Public (for initial setup)
 router.post('/', async (req, res) => {
   try {
+    console.log('🔧 Create admin route hit');
+    console.log('📧 Request body:', req.body);
+    
     const { email, password } = req.body;
     
     if (!email || !password) {
+      console.log('❌ Missing email or password');
       return res.status(400).json({
         success: false,
         message: 'Email and password are required'
       });
     }
 
+    console.log('🔍 Looking for user with email:', email);
     // Check if user already exists
     let user = await User.findOne({ email });
+    console.log('👤 Found user:', user ? user._id : 'Not found');
     
     if (user) {
       // Update existing user to admin
