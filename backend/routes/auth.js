@@ -4,8 +4,8 @@ const { check } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect, authorize } = require('../middleware/auth');
-const admin = require('../config/firebase');
-const { firebaseInitialized } = require('../config/firebase');
+const admin = require('../config/firebaseAdmin');
+const { firebaseInitialized } = require('../config/firebaseAdmin');
 
 // @desc    Register user
 // @route   POST /api/auth/register
