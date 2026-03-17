@@ -22,7 +22,9 @@ backend/.env.production
 
 # Firebase
 firebase-service-account.json
+firebase-service-account.json.json
 backend/config/firebase-service-account.json
+backend/config/firebase-service-account.json.json
 
 # Editor directories and files
 .vscode/*
