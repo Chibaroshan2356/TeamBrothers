@@ -3,12 +3,15 @@ const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
 
+// Initialize Firebase Admin
+require('./config/firebaseAdmin');
+
 // Load env variables
 require('dotenv').config();
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
-  console.error("❌ Uncaught Exception:", err.message);
+  console.error(" Uncaught Exception:", err.message);
   process.exit(1);
 });
 
