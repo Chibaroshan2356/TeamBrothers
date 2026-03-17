@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { signInWithPopup } from "firebase/auth"
 import { auth, googleProvider } from "../firebase"
 import bus from "../assets/bus.png"
+import { API } from '@/utils/api';
 
 export function Signup(){
 
@@ -24,9 +25,9 @@ return
 
 try{
 
-const res = await fetch("http://localhost:5000/api/auth/register",{
+const res = await fetch(API.AUTH.REGISTER,{
 method:"POST",
-headers:{ "Content-Type":"application/json" },
+headers: API.getHeaders(),
 body:JSON.stringify({name,email,password})
 })
 
@@ -56,9 +57,9 @@ const result = await signInWithPopup(auth,googleProvider)
 const user = result.user
 const idToken = await user.getIdToken()
 
-const res = await fetch("http://localhost:5000/api/auth/google",{
+const res = await fetch(API.AUTH.GOOGLE,{
 method:"POST",
-headers:{ "Content-Type":"application/json" },
+headers: API.getHeaders(),
 body:JSON.stringify({
 idToken,
 displayName: user.displayName,

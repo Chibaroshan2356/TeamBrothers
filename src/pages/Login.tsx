@@ -1,28 +1,14 @@
-import { useState } from "react";
-
-import { Link, useNavigate } from "react-router-dom";
-
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { signInWithPopup } from "firebase/auth";
-
 import { auth, googleProvider, isFirebaseConfigured } from "../firebase";
-
 import { useToastHelpers } from "@/components/ui/saas-toast";
-
 import { useApp } from "@/context/AppContext";
-
-
-
 import { Button } from "@/components/ui/button";
-
 import { Input } from "@/components/ui/input";
-
 import { Label } from "@/components/ui/label";
-
-
-
 import { Chrome } from "lucide-react";
-
-
+import { API } from '@/utils/api';
 
 export function Login() {
 
@@ -124,15 +110,11 @@ export function Login() {
 
 
 
-      const response = await fetch("http://localhost:5000/api/auth/google", {
+      const response = await fetch(API.AUTH.GOOGLE, {
 
         method: "POST",
 
-        headers: {
-
-          "Content-Type": "application/json",
-
-        },
+        headers: API.getHeaders(),
 
         body: JSON.stringify({ 
 

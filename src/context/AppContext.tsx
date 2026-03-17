@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { API } from '@/utils/api';
 import { vehicles as initialVehicles, Vehicle, Booking, BookingStatus } from '@/data/vehicles';
 
 interface AppContextType {
@@ -76,11 +77,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(API.AUTH.LOGIN, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: API.getHeaders(),
         body: JSON.stringify({ email, password }),
       });
 
