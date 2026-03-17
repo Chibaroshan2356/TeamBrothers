@@ -4,23 +4,27 @@ const fs = require("fs");
 let serviceAccount;
 
 try {
-  const path = "/etc/secrets/firebase-service-account.json";
+  // Try production path first
+  const prodPath = "/etc/secrets/firebase-service-account.json";
+  
+  if (fs.existsSync(prodPath)) {
+    serviceAccount = require(prodPath);
+    console.log("✅ Firebase Admin initialized (production)");
+  } else {
+    // Fallback to local development (comment out in production)
+    // serviceAccount = require("./firebase-service-account.json");
+    console.warn("⚠️ Firebase service account file not found - Firebase features disabled");
+  }
 
-  if (fs.existsSync(path)) {
-    serviceAccount = require(path);
-
+  if (serviceAccount) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
-
-    console.log("✅ Firebase Admin initialized");
-
-  } else {
-    console.warn("⚠️ Firebase service account file not found");
+    console.log("✅ Firebase Admin initialized successfully");
   }
 
 } catch (error) {
-  console.error("Firebase init error:", error);
+  console.error("❌ Firebase init error:", error);
 }
 
 module.exports = admin;
