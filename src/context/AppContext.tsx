@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { API } from '@/utils/api';
 import { safeParseJSON, safeSetItem, safeRemoveItem, clearCorruptedStorage } from '@/utils/localStorage';
 import { vehicles as initialVehicles, Vehicle, Booking, BookingStatus } from '@/data/vehicles';
@@ -144,9 +144,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const refreshVehicleData = () => {
-    setVehicles([...initialVehicles]);
-  };
+  const refreshVehicleData = useCallback(() => {
+    try {
+      setVehicles([...initialVehicles]);
+    } catch (error) {
+      console.error('Error refreshing vehicle data:', error);
+    }
+  }, []);
 
   const addBooking = (bookingData: Omit<Booking, 'id' | 'createdAt'>): Booking => {
     const newBooking: Booking = {
