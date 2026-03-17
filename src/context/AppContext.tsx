@@ -74,7 +74,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   // Admin credentials (in a real app, this would be handled by a backend)
-  const ADMIN_EMAIL = 'admin23@gmail.com';
+  const ADMIN_EMAIL = 'chibaroshan23@gmail.com';
   const ADMIN_PASSWORD = 'admin123';
 
   const login = async (email: string, password: string): Promise<boolean> => {

@@ -24,6 +24,7 @@ const bookingRoutes = require('./routes/bookings');
 const contactRoutes = require('./routes/contact');
 const analyticsRoutes = require('./api/analytics');
 const vehiclesRoutes = require('./routes/vehicles');
+const createAdminRoutes = require('./routes/createAdmin');
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/vehicles', vehiclesRoutes);
+app.use('/api/create-admin', createAdminRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
