@@ -79,6 +79,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log('🔍 Attempting login with email:', email);
       const response = await fetch(API.AUTH.LOGIN, {
         method: 'POST',
         headers: API.getHeaders(),
@@ -86,18 +87,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
 
       const data = await response.json();
+      console.log('👤 Login response:', data);
 
       if (response.ok && data.success) {
+        console.log('✅ Login successful, user data:', data.user);
         setIsAuthenticated(true);
         setIsAdmin(data.user.role === 'admin');
         setUser(data.user);
         localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('isAdmin', String(data.user.role === 'admin'));
-        localStorage.setItem('user', JSON.stringify(data.user));
         return true;
+      } else {
+        console.error('❌ Login failed:', data.message);
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('Login error:', error);
       return false;

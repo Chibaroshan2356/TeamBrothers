@@ -155,10 +155,13 @@ router.post('/google', async (req, res) => {
     const { email, name, picture, uid } = decodedToken;
     
     // Check if user exists in our database
+    console.log('🔍 Looking for user with email:', email);
     let user = await User.findOne({ email });
+    console.log('👤 Found user:', user ? user._id : 'Not found');
     
     if (!user) {
       // Create new user with Google OAuth
+      console.log('🆕 Creating new Google user for email:', email);
       user = new User({
         name: name || email.split('@')[0],
         email,
@@ -168,7 +171,15 @@ router.post('/google', async (req, res) => {
       });
       
       await user.save();
-      console.log('New Google user created:', user._id);
+      console.log('✅ New Google user created:', user._id);
+    } else {
+      console.log('✅ Existing user found, linking Google account');
+      // Update existing user with Google ID if not already set
+      if (!user.googleId) {
+        user.googleId = uid;
+        await user.save();
+        console.log('🔗 Google ID linked to existing user');
+      }
     }
 
     // Generate JWT token using the User model method
