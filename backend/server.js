@@ -37,8 +37,9 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "http://localhost:5173",
+    "http://13.60.216.98",
     "https://team-brothers-eight.vercel.app",
-    "http://13.60.216.98"
+    "https://teambrothers.onrender.com"
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true
