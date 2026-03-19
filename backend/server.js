@@ -40,6 +40,7 @@ app.use(cors({
       "http://localhost:5173",
       "http://13.60.216.98",
       "http://16.171.19.149",
+      "https://team-brothers-eight.vercel.app",
       "https://teambrothers.onrender.com"
     ];
 
