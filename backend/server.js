@@ -35,13 +35,20 @@ app.use(express.json());
 
 // CORS (for Vercel frontend)
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://13.60.216.98",
-    "https://team-brothers-eight.vercel.app",
-    "https://teambrothers.onrender.com"
-  ],
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "http://13.60.216.98",
+      "http://16.171.19.149",
+      "https://teambrothers.onrender.com"
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
   credentials: true
 }));
 app.options("*", cors());
