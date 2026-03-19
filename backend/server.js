@@ -37,7 +37,7 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://team-brothers-eight.vercel.app"
+    "https://team-brothers-eight.vercel.app",
     "http://13.60.216.98"
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
