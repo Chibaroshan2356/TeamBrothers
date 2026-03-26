@@ -38,7 +38,7 @@ app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
       "http://localhost:5173",
-      "http://13.60.216.98",
+      "http://13.48.16.71",
       "http://16.171.19.149",
       "http://16.171.31.230",
       "https://team-brothers-eight.vercel.app",
