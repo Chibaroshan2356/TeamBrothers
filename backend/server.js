@@ -33,11 +33,22 @@ const app = express();
 // Body parser
 app.use(express.json());
 
+// Fix Cross-Origin-Opener-Policy warning for Google Auth popups
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+  next();
+});
+
 // CORS (for Vercel frontend)
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
+      "http://localhost:3000",
       "http://localhost:5173",
+      "http://localhost:9090",
+      "http://127.0.0.1:62389",
+      "http://192.168.49.2",
       "http://13.48.16.71",
       "http://16.171.19.149",
       "http://16.171.31.230",
@@ -51,7 +62,9 @@ app.use(cors({
       callback(new Error("CORS not allowed"));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.options("*", cors());
 

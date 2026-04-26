@@ -1,6 +1,6 @@
 // API utility for consistent API calls across the application
 
-const API_URL = 'https://teambrothers.onrender.com'; // Force production URL
+const API_URL = "http://localhost:5000";
 
 export const API = {
   // Base URL

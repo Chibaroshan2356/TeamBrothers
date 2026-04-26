@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: teambrothers-backend
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+        env:
+        - name: PORT
+          value: "5000"
+        - name: NODE_ENV
+          value: "production"
+        - name: MONGODB_URI
+          value: "YOUR_MONGODB_URI"
+        - name: JWT_SECRET
+          value: "YOUR_JWT_SECRET"
+        - name: FIREBASE_PROJECT_ID
+          value: "YOUR_FIREBASE_PROJECT_ID"
+        - name: FIREBASE_CLIENT_EMAIL
+          value: "YOUR_FIREBASE_CLIENT_EMAIL"
+        - name: FIREBASE_PRIVATE_KEY
+          value: "YOUR_FIREBASE_PRIVATE_KEY"

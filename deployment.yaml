@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teambrothers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teambrothers
+  template:
+    metadata:
+      labels:
+        app: teambrothers
+    spec:
+      containers:
+      - name: teambrothers
+        image: chibaroshan/teambrothers-frontend:v1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
